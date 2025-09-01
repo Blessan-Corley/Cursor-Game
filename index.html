@@ -120,8 +120,8 @@
         const gameOverScreen = document.getElementById('gameOver');
         const finalScoreDisplay = document.getElementById('finalScore');
         
-        // Game state
-        let gameState = 'waiting'; // 'waiting', 'playing', 'gameOver'
+        
+        let gameState = 'waiting'; 
         let score = 0;
         let mouseX = canvas.width / 2;
         let mouseY = canvas.height / 2;
@@ -132,12 +132,12 @@
         let reverseControlsTimer = 0;
         let speedLevel = 1;
         
-        // Circle arena
+        
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const arenaRadius = 280;
         
-        // Ball (chaser) - with progressive difficulty
+        
         const ball = {
             x: centerX,
             y: centerY - 100,
@@ -149,17 +149,17 @@
             vy: 0
         };
         
-        // Game timing
-        const starLifetime = 4000; // 4 seconds to collect stars
-        const redStarLifetime = 6000; // Red stars last longer
-        const reverseControlsDuration = 3000; // 3 seconds of reversed controls
         
-        // Stars array
+        const starLifetime = 4000; 
+        const redStarLifetime = 6000; 
+        const reverseControlsDuration = 3000; 
+        
+        
         let stars = [];
         const maxStars = 3;
         const starRadius = 8;
         
-        // Mouse tracking with boundary constraint and reverse controls
+        
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             rawMouseX = e.clientX - rect.left;
@@ -168,7 +168,7 @@
             let targetMouseX = rawMouseX;
             let targetMouseY = rawMouseY;
             
-            // Apply reverse controls if active
+            
             if (isControlsReversed && gameState === 'playing') {
                 const centerX = canvas.width / 2;
                 const centerY = canvas.height / 2;
@@ -176,7 +176,7 @@
                 targetMouseY = centerY - (rawMouseY - centerY);
             }
             
-            // If game is playing, constrain mouse to circle
+            
             if (gameState === 'playing') {
                 const distFromCenter = Math.sqrt((targetMouseX - centerX) ** 2 + (targetMouseY - centerY) ** 2);
                 if (distFromCenter > arenaRadius - 10) {
@@ -190,7 +190,7 @@
             mouseY = targetMouseY;
         });
         
-        // Keyboard controls
+        
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
@@ -230,7 +230,7 @@
         }
         
         function updateDifficulty() {
-            // Increase speed every 75 points
+            
             const newSpeedLevel = Math.floor(score / 75) + 1;
             if (newSpeedLevel !== speedLevel) {
                 speedLevel = newSpeedLevel;
@@ -262,7 +262,7 @@
                 }
                 
                 if (validPosition) {
-                    // 15% chance for red star (reverse controls)
+                    
                     const isRedStar = Math.random() < 0.15;
                     const lifetime = isRedStar ? redStarLifetime : starLifetime;
                     
@@ -283,23 +283,23 @@
         function updateBall() {
             if (gameState !== 'playing') return;
             
-            // Calculate direction to mouse for chasing behavior
+            
             const dx = mouseX - ball.x;
             const dy = mouseY - ball.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             
             if (distance > 0) {
-                // Add chasing force to velocity (stronger with higher speed level)
+                
                 const chaseForce = 0.3 + (speedLevel - 1) * 0.05;
                 ball.vx += (dx / distance) * chaseForce;
                 ball.vy += (dy / distance) * chaseForce;
             }
             
-            // Reduced drag for more momentum buildup
-            ball.vx *= 0.97; // Was 0.95, now less drag
+            
+            ball.vx *= 0.97; 
             ball.vy *= 0.97;
             
-            // Limit maximum speed based on current difficulty
+            
             const maxSpeed = ball.currentSpeed;
             const currentSpeed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
             if (currentSpeed > maxSpeed) {
@@ -307,35 +307,35 @@
                 ball.vy = (ball.vy / currentSpeed) * maxSpeed;
             }
             
-            // Update position
+            
             ball.x += ball.vx;
             ball.y += ball.vy;
             
-            // Bounce off arena walls with physics (less damping for more momentum)
+            
             const distFromCenter = Math.sqrt((ball.x - centerX) ** 2 + (ball.y - centerY) ** 2);
             if (distFromCenter + ball.radius > arenaRadius) {
-                // Calculate collision normal
+                
                 const normalX = (ball.x - centerX) / distFromCenter;
                 const normalY = (ball.y - centerY) / distFromCenter;
                 
-                // Reflect velocity vector
+                
                 const dotProduct = ball.vx * normalX + ball.vy * normalY;
                 ball.vx -= 2 * dotProduct * normalX;
                 ball.vy -= 2 * dotProduct * normalY;
                 
-                // Position ball at boundary
+                
                 ball.x = centerX + normalX * (arenaRadius - ball.radius);
                 ball.y = centerY + normalY * (arenaRadius - ball.radius);
                 
-                // Less bounce damping for more momentum buildup
-                ball.vx *= 0.9; // Was 0.8, now retains more velocity
+                
+                ball.vx *= 0.9; 
                 ball.vy *= 0.9;
                 
-                // Trigger shake effect
+                
                 shakeIntensity = 8;
             }
             
-            // Reduce shake intensity
+            
             if (shakeIntensity > 0) {
                 shakeIntensity *= 0.85;
                 if (shakeIntensity < 0.1) shakeIntensity = 0;
@@ -345,41 +345,41 @@
         function updateGameState() {
             if (gameState !== 'playing') return;
             
-            // Update reverse controls timer
+            
             if (isControlsReversed) {
-                reverseControlsTimer -= 16; // Assuming 60fps
+                reverseControlsTimer -= 16; 
                 if (reverseControlsTimer <= 0) {
                     isControlsReversed = false;
                     reverseWarning.style.display = 'none';
                 }
             }
             
-            // Update stars (check for expiration and blinking)
+            
             const currentTime = Date.now();
             stars.forEach((star, index) => {
                 const age = currentTime - star.spawnTime;
                 const timeRemaining = star.lifetime - age;
                 
-                // Start blinking when 1 second left
+                
                 if (timeRemaining < 1000) {
                     star.blinkTimer += 16;
                     star.isBlinking = Math.floor(star.blinkTimer / 200) % 2 === 0;
                 }
                 
-                // Remove expired stars
+                
                 if (timeRemaining <= 0) {
                     stars.splice(index, 1);
                 }
             });
             
-            // Update difficulty
+            
             updateDifficulty();
         }
         
         function checkCollisions() {
             if (gameState !== 'playing') return;
             
-            // Check ball-cursor collision
+            
             const distToCursor = Math.sqrt((mouseX - ball.x) ** 2 + (mouseY - ball.y) ** 2);
             if (distToCursor < ball.radius + 8) {
                 gameState = 'gameOver';
@@ -388,7 +388,7 @@
                 return;
             }
             
-            // Check star collection
+            
             stars.forEach((star, index) => {
                 if (!star.collected) {
                     const distToStar = Math.sqrt((mouseX - star.x) ** 2 + (mouseY - star.y) ** 2);
@@ -396,13 +396,13 @@
                         star.collected = true;
                         
                         if (star.isRed) {
-                            // Red star: reverse controls
+                            
                             isControlsReversed = true;
                             reverseControlsTimer = reverseControlsDuration;
                             reverseWarning.style.display = 'block';
-                            score += 5; // Less points for red stars
+                            score += 5; 
                         } else {
-                            // Normal star
+                            
                             score += 10;
                         }
                         
@@ -436,7 +436,7 @@
         }
         
         function draw() {
-            // Apply shake effect
+            
             ctx.save();
             if (shakeIntensity > 0) {
                 const shakeX = (Math.random() - 0.5) * shakeIntensity;
@@ -444,34 +444,34 @@
                 ctx.translate(shakeX, shakeY);
             }
             
-            // Clear canvas with black background
+            
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Draw arena circle
+            
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(centerX, centerY, arenaRadius, 0, Math.PI * 2);
             ctx.stroke();
             
-            // Draw arena background (dark gray)
+            
             ctx.fillStyle = '#111111';
             ctx.fill();
             
-            // Draw stars
+            
             stars.forEach(star => {
-                // Skip drawing if blinking and in "off" phase
+                
                 if (star.isBlinking && star.blinkTimer && Math.floor(star.blinkTimer / 200) % 2 === 1) {
                     return;
                 }
                 
                 if (star.isRed) {
-                    // Red star
+                    
                     ctx.fillStyle = '#ff4444';
                     ctx.strokeStyle = '#ff4444';
                 } else {
-                    // Normal white star
+                    
                     ctx.fillStyle = '#ffffff';
                     ctx.strokeStyle = '#ffffff';
                 }
@@ -482,7 +482,7 @@
                 ctx.stroke();
             });
             
-            // Draw cursor (always visible, black dot with white outline)
+            
             ctx.fillStyle = '#000000';
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 2;
@@ -491,7 +491,7 @@
             ctx.fill();
             ctx.stroke();
             
-            // Draw ball (white with black outline)
+            
             ctx.fillStyle = ball.color;
             ctx.strokeStyle = '#000000';
             ctx.lineWidth = 2;
@@ -510,13 +510,6 @@
             console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
             console.log('%c│    Designed & Developed by Blessan Corley  │', 'color: #f093fb; font-size: 14px; font-weight: 600;');
             console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
-            console.log('%c│    Technologies Used:                      │', 'color: #4facfe; font-size: 13px; font-weight: 500;');
-            console.log('%c│    • HTML5 Canvas API                      │', 'color: #43e97b; font-size: 12px;');
-            console.log('%c│    • JavaScript ES6+                      │', 'color: #43e97b; font-size: 12px;');
-            console.log('%c│    • CSS3 Animations                       │', 'color: #43e97b; font-size: 12px;');
-            console.log('%c│    • requestAnimationFrame                 │', 'color: #43e97b; font-size: 12px;');
-            console.log('%c│    • 2D Physics & Collision Detection      │', 'color: #43e97b; font-size: 12px;');
-            console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
             console.log('%c│           Enjoy the Game!                  │', 'color: #4facfe; font-size: 14px; font-weight: 600;');
             console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
             console.log('%c└────────────────────────────────────────────┘', 'color: #667eea; font-size: 14px;');
@@ -528,7 +521,7 @@
             checkCollisions();
             draw();
             
-            // Spawn stars periodically
+            
             if (gameState === 'playing' && Math.random() < 0.008) {
                 spawnStar();
             }
@@ -536,10 +529,10 @@
             requestAnimationFrame(gameLoop);
         }
         
-        // Display developer credits
+        
         displayDeveloperCredits();
         
-        // Start the game loop
+        
         gameLoop();
     </script>
 </body>
