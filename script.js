@@ -8,14 +8,14 @@ const gameOverScreen = document.getElementById('gameOver');
 const finalScoreDisplay = document.getElementById('finalScore');
 const highScoreDisplay = document.getElementById('highScore');
 
-// Initialize canvas size for mobile
+
 function initCanvas() {
     const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.8, 600);
     canvas.width = size;
     canvas.height = size;
 }
 
-// Initialize high score from localStorage
+
 let highScore = localStorage.getItem('cursorChaseHighScore') || 0;
 highScoreDisplay.textContent = highScore;
 
@@ -53,7 +53,7 @@ let stars = [];
 const maxStars = 3;
 const starRadius = 8;
 
-// Mobile touch handling
+
 let isMobile = false;
 const touchOverlay = document.createElement('div');
 touchOverlay.className = 'touch-overlay';
@@ -96,7 +96,7 @@ function handlePointerMove(e) {
     mouseY = targetMouseY;
 }
 
-// Event listeners for both mouse and touch
+
 canvas.addEventListener('mousemove', handlePointerMove);
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
@@ -112,7 +112,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Mobile tap to start
+
 canvas.addEventListener('click', () => {
     if (gameState === 'waiting') {
         startGame();
@@ -127,7 +127,7 @@ canvas.addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 function startGame() {
-    // Recalculate dimensions in case window was resized
+    
     initCanvas();
     centerX = canvas.width / 2;
     centerY = canvas.height / 2;
@@ -164,16 +164,16 @@ function restartGame() {
 }
 
 function updateDifficulty() {
-    // Gradual smooth acceleration instead of sudden jumps
-    // Speed increases slowly as score grows
-    const baseSpeed = 3.5;
-    const maxSpeed = 12; // cap at reasonable speed
     
-    // Smooth curve: speed = base + log(score + 1) * 0.5
+    
+    const baseSpeed = 3.5;
+    const maxSpeed = 12; 
+    
+    
     const speedMultiplier = Math.log(score + 1) * 0.5;
     ball.currentSpeed = Math.min(baseSpeed + speedMultiplier, maxSpeed);
     
-    // Update speed level display (for UI only)
+    
     const newSpeedLevel = Math.floor(Math.log(score + 1) * 2) + 1;
     if (newSpeedLevel !== speedLevel) {
         speedLevel = newSpeedLevel;
@@ -229,7 +229,7 @@ function updateBall() {
     const distance = Math.sqrt(dx * dx + dy * dy);
     
     if (distance > 0) {
-        // Gradual chasing force based on score
+        
         const chaseForce = 0.3 + Math.log(score + 1) * 0.05;
         ball.vx += (dx / distance) * chaseForce;
         ball.vy += (dy / distance) * chaseForce;
@@ -245,15 +245,15 @@ function updateBall() {
         ball.vy = (ball.vy / currentSpeed) * maxSpeed;
     }
 
-    // Store previous position for accurate collision detection
+    
     const prevX = ball.x;
     const prevY = ball.y;
     
-    // Update ball position
+    
     ball.x += ball.vx;
     ball.y += ball.vy;
 
-    // Check if CURSOR hits the arena border - GAME OVER (player loses)
+    
     const cursorDistFromCenter = Math.sqrt((mouseX - centerX) ** 2 + (mouseY - centerY) ** 2);
     if (cursorDistFromCenter > arenaRadius - 10) {
         gameOverReason = 'You hit the wall!';
@@ -261,32 +261,32 @@ function updateBall() {
         return;
     }
 
-    // Handle BALL collision with arena border (realistic bouncing)
+    
     const distFromCenter = Math.sqrt((ball.x - centerX) ** 2 + (ball.y - centerY) ** 2);
     const ballEdgeDist = distFromCenter + ball.radius;
     
     if (ballEdgeDist > arenaRadius) {
-        // Calculate the exact point of collision
+        
         const overlap = ballEdgeDist - arenaRadius;
         
-        // Move ball back to prevent sticking
+        
         const correctionX = (ball.x - centerX) / distFromCenter * overlap;
         const correctionY = (ball.y - centerY) / distFromCenter * overlap;
         ball.x -= correctionX;
         ball.y -= correctionY;
         
-        // Calculate normal vector (pointing from center to ball)
+        
         const normalX = (ball.x - centerX) / distFromCenter;
         const normalY = (ball.y - centerY) / distFromCenter;
         
-        // Calculate dot product for reflection
+        
         const dotProduct = ball.vx * normalX + ball.vy * normalY;
         
-        // Reflect velocity vector
+        
         ball.vx -= 2 * dotProduct * normalX;
         ball.vy -= 2 * dotProduct * normalY;
         
-        // Apply energy loss (damping) for realistic bounce
+        
         ball.vx *= 0.85;
         ball.vy *= 0.85;
     }
@@ -379,7 +379,7 @@ function triggerGameOver() {
     gameState = 'gameOver';
     finalScoreDisplay.textContent = score;
     
-    // Set the specific game over reason
+    
     const gameOverReasonElement = document.getElementById('gameOverReason');
     if (gameOverReasonElement) {
         gameOverReasonElement.textContent = gameOverReason;
@@ -387,7 +387,7 @@ function triggerGameOver() {
     
     gameOverScreen.style.display = 'block';
     
-    // Update high score
+    
     if (score > highScore) {
         highScore = score;
         localStorage.setItem('cursorChaseHighScore', highScore);
@@ -396,11 +396,11 @@ function triggerGameOver() {
 }
 
 function draw() {
-    // Clear canvas
+    
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw arena
+    
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -410,7 +410,7 @@ function draw() {
     ctx.fillStyle = '#111111';
     ctx.fill();
 
-    // Draw stars
+    
     stars.forEach(star => {
         if (star.isBlinking && star.blinkTimer && Math.floor(star.blinkTimer / 200) % 2 === 1) {
             return;
@@ -430,7 +430,7 @@ function draw() {
         ctx.stroke();
     });
 
-    // Draw cursor
+    
     ctx.fillStyle = '#000000';
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
@@ -439,7 +439,7 @@ function draw() {
     ctx.fill();
     ctx.stroke();
 
-    // Draw ball
+    
     ctx.fillStyle = ball.color;
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 2;
@@ -474,7 +474,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Handle window resize for mobile
+
 window.addEventListener('resize', () => {
     if (gameState === 'waiting') {
         initCanvas();
@@ -486,7 +486,7 @@ window.addEventListener('resize', () => {
     }
 });
 
-// Initialize
+
 initCanvas();
 centerX = canvas.width / 2;
 centerY = canvas.height / 2;
@@ -494,7 +494,7 @@ arenaRadius = Math.min(canvas.width, canvas.height) * 0.45;
 ball.x = centerX;
 ball.y = centerY - 100;
 
-// Set initial instructions based on device
+
 isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 instructions.textContent = isMobile ? 'Tap to start playing!' : 'Press SPACE to start playing!';
 
