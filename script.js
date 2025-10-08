@@ -11,21 +11,9 @@ const highScoreDisplay = document.getElementById('highScore');
 
 function initCanvas() {
     const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.8, 600);
-    const dpr = window.devicePixelRatio || 1;
-
-    
-    canvas.style.width = size + 'px';
-    canvas.style.height = size + 'px';
-
-    
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-
-    ctx.setTransform(1, 0, 0, 1, 0, 0); 
-    ctx.scale(dpr, dpr);
-
+    canvas.width = size;
+    canvas.height = size;
 }
-
 
 
 let highScore = localStorage.getItem('cursorChaseHighScore') || 0;
@@ -461,6 +449,18 @@ function draw() {
     ctx.stroke();
 }
 
+function displayDeveloperCredits() {
+    console.log('%c┌────────────────────────────────────────────┐', 'color: #667eea; font-size: 14px;');
+    console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
+    console.log('%c│        Welcome to Cursor Chase Game!      │', 'color: #764ba2; font-size: 16px; font-weight: bold;');
+    console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
+    console.log('%c│    Designed & Developed by Blessan Corley  │', 'color: #f093fb; font-size: 14px; font-weight: 600;');
+    console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
+    console.log('%c│           Enjoy the Game!                  │', 'color: #4facfe; font-size: 14px; font-weight: 600;');
+    console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
+    console.log('%c└────────────────────────────────────────────┘', 'color: #667eea; font-size: 14px;');
+}
+
 function gameLoop() {
     updateBall();
     updateGameState();
@@ -476,21 +476,15 @@ function gameLoop() {
 
 
 window.addEventListener('resize', () => {
-  initCanvas();
-
-  
-  const dpr = window.devicePixelRatio || 1;
-  centerX = canvas.width / 2 / dpr;
-  centerY = canvas.height / 2 / dpr;
-  arenaRadius = Math.min(canvas.width, canvas.height) * 0.45 / dpr;
-
-  
-  if (gameState === 'waiting') {
-    ball.x = centerX;
-    ball.y = centerY - 100;
-  }
+    if (gameState === 'waiting') {
+        initCanvas();
+        centerX = canvas.width / 2;
+        centerY = canvas.height / 2;
+        arenaRadius = Math.min(canvas.width, canvas.height) * 0.45;
+        ball.x = centerX;
+        ball.y = centerY - 100;
+    }
 });
-
 
 
 initCanvas();
@@ -503,4 +497,6 @@ ball.y = centerY - 100;
 
 isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 instructions.textContent = isMobile ? 'Tap to start playing!' : 'Press SPACE to start playing!';
+
+displayDeveloperCredits();
 gameLoop();
