@@ -449,17 +449,6 @@ function draw() {
     ctx.stroke();
 }
 
-function displayDeveloperCredits() {
-    console.log('%c┌────────────────────────────────────────────┐', 'color: #667eea; font-size: 14px;');
-    console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
-    console.log('%c│        Welcome to Cursor Chase Game!      │', 'color: #764ba2; font-size: 16px; font-weight: bold;');
-    console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
-    console.log('%c│    Designed & Developed by Blessan Corley  │', 'color: #f093fb; font-size: 14px; font-weight: 600;');
-    console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
-    console.log('%c│           Enjoy the Game!                  │', 'color: #4facfe; font-size: 14px; font-weight: 600;');
-    console.log('%c│                                            │', 'color: #667eea; font-size: 14px;');
-    console.log('%c└────────────────────────────────────────────┘', 'color: #667eea; font-size: 14px;');
-}
 
 function gameLoop() {
     updateBall();
@@ -498,5 +487,4 @@ ball.y = centerY - 100;
 isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 instructions.textContent = isMobile ? 'Tap to start playing!' : 'Press SPACE to start playing!';
 
-displayDeveloperCredits();
 gameLoop();
