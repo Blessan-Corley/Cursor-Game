@@ -3,6 +3,7 @@ const ctx = canvas.getContext('2d');
 const scoreDisplay = document.getElementById('scoreDisplay');
 const speedLevelDisplay = document.getElementById('speedLevel');
 const reverseWarning = document.getElementById('reverseWarning');
+const reverseTimerBar = document.getElementById('reverseTimerBar');
 const instructions = document.getElementById('instructions');
 const gameOverScreen = document.getElementById('gameOver');
 const finalScoreDisplay = document.getElementById('finalScore');
@@ -16,8 +17,14 @@ function initCanvas() {
 }
 
 
-let highScore = localStorage.getItem('cursorChaseHighScore') || 0;
-highScoreDisplay.textContent = highScore;
+let lastHighScore = localStorage.getItem('cursorChaseHighScore') || 0;
+highScoreDisplay.textContent = lastHighScore;
+
+let lastRawX = undefined;
+let lastRawY = undefined;
+let isMouseInside = false;
+let playerX = 0;
+let playerY = 0;
 
 let gameState = 'waiting'; 
 let score = 0;
@@ -38,8 +45,8 @@ const ball = {
     x: 0,
     y: 0,
     radius: 15,
-    baseSpeed: 3.5,
-    currentSpeed: 3.5,
+    baseSpeed: 5.0,
+    currentSpeed: 5.0,
     color: '#ffffff',
     vx: 0,
     vy: 0
@@ -72,28 +79,40 @@ function handlePointerMove(e) {
         clientY = e.clientY;
     }
     
-    rawMouseX = clientX - rect.left;
-    rawMouseY = clientY - rect.top;
-    
-    let targetMouseX = rawMouseX;
-    let targetMouseY = rawMouseY;
+    // Absolute Position Logic
+    let targetX = clientX - rect.left;
+    let targetY = clientY - rect.top;
 
+    // Reverse Controls: Mirror the target position across the center
     if (isControlsReversed && gameState === 'playing') {
-        targetMouseX = centerX - (rawMouseX - centerX);
-        targetMouseY = centerY - (rawMouseY - centerY);
+        targetX = centerX - (targetX - centerX);
+        targetY = centerY - (targetY - centerY);
     }
 
-    if (gameState === 'playing') {
-        const distFromCenter = Math.sqrt((targetMouseX - centerX) ** 2 + (targetMouseY - centerY) ** 2);
-        if (distFromCenter > arenaRadius - 10) {
-            const angle = Math.atan2(targetMouseY - centerY, targetMouseX - centerX);
-            targetMouseX = centerX + Math.cos(angle) * (arenaRadius - 10);
-            targetMouseY = centerY + Math.sin(angle) * (arenaRadius - 10);
+    // Apply strict physics to player position (smooth movement towards target could be added here, 
+    // but instant tracking is most responsive).
+    playerX = targetX;
+    playerY = targetY;
+
+    // Check border collision
+    const distFromCenter = Math.sqrt((playerX - centerX) ** 2 + (playerY - centerY) ** 2);
+    
+    // VISUAL CLAMP: Ensure dot never visually leaves the arena
+    if (distFromCenter > arenaRadius - 6) {
+        const angle = Math.atan2(playerY - centerY, playerX - centerX);
+        playerX = centerX + Math.cos(angle) * (arenaRadius - 6);
+        playerY = centerY + Math.sin(angle) * (arenaRadius - 6);
+        
+        // Strict Game Over on Border Touch
+        if (gameState === 'playing') {
+            gameOverReason = 'You touched the border!';
+            triggerGameOver();
+            return;
         }
     }
     
-    mouseX = targetMouseX;
-    mouseY = targetMouseY;
+    mouseX = playerX;
+    mouseY = playerY;
 }
 
 
@@ -102,6 +121,25 @@ canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
     handlePointerMove(e);
 }, { passive: false });
+
+// Simplified listeners - Absolute positioning doesn't need complex enter/leave logic
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    isMobile = true;
+    handlePointerMove(e); // Update position immediately on touch
+    if (gameState === 'waiting') {
+        startGame();
+    }
+}, { passive: false });
+
+canvas.addEventListener('mouseenter', (e) => {
+    isMouseInside = true;
+    handlePointerMove(e); // Sync immediately on enter
+});
+
+canvas.addEventListener('mouseleave', () => {
+    isMouseInside = false;
+});
 
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
@@ -119,15 +157,26 @@ canvas.addEventListener('click', () => {
     }
 });
 
-canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    if (gameState === 'waiting') {
-        startGame();
-    }
-}, { passive: false });
+// Touchstart listener handled above in the combined logic block
 
 function startGame() {
-    
+    // Don't start if mouse is outside (Desktop only)
+    if (!isMobile && !isMouseInside) {
+        const originalText = instructions.textContent;
+        instructions.textContent = "Place mouse inside the circle to start!";
+        instructions.style.color = "#ff4444";
+        instructions.style.fontWeight = "bold";
+        
+        setTimeout(() => {
+            if (gameState === 'waiting') {
+                instructions.textContent = originalText;
+                instructions.style.color = "";
+                instructions.style.fontWeight = "normal";
+            }
+        }, 2000);
+        return;
+    }
+
     initCanvas();
     centerX = canvas.width / 2;
     centerY = canvas.height / 2;
@@ -137,6 +186,12 @@ function startGame() {
     score = 0;
     speedLevel = 1;
     stars = [];
+    
+    playerX = centerX;
+    playerY = centerY + 100;
+    mouseX = playerX;
+    mouseY = playerY;
+
     ball.x = centerX;
     ball.y = centerY - 100;
     ball.vx = 0;
@@ -166,15 +221,15 @@ function restartGame() {
 function updateDifficulty() {
     
     
-    const baseSpeed = 3.5;
-    const maxSpeed = 12; 
+    const baseSpeed = 5.0;
+    const maxSpeed = 20; 
     
     
-    const speedMultiplier = Math.log(score + 1) * 0.5;
+    const speedMultiplier = (Math.log(score + 1) * 0.6) + (score * 0.025);
     ball.currentSpeed = Math.min(baseSpeed + speedMultiplier, maxSpeed);
     
     
-    const newSpeedLevel = Math.floor(Math.log(score + 1) * 2) + 1;
+    const newSpeedLevel = Math.floor(ball.currentSpeed - baseSpeed) + 1;
     if (newSpeedLevel !== speedLevel) {
         speedLevel = newSpeedLevel;
         speedLevelDisplay.textContent = speedLevel;
@@ -230,7 +285,7 @@ function updateBall() {
     
     if (distance > 0) {
         
-        const chaseForce = 0.3 + Math.log(score + 1) * 0.05;
+        const chaseForce = 0.5 + (score * 0.005);
         ball.vx += (dx / distance) * chaseForce;
         ball.vy += (dy / distance) * chaseForce;
     }
@@ -252,14 +307,6 @@ function updateBall() {
     
     ball.x += ball.vx;
     ball.y += ball.vy;
-
-    
-    const cursorDistFromCenter = Math.sqrt((mouseX - centerX) ** 2 + (mouseY - centerY) ** 2);
-    if (cursorDistFromCenter > arenaRadius - 10) {
-        gameOverReason = 'You hit the wall!';
-        triggerGameOver();
-        return;
-    }
 
     
     const distFromCenter = Math.sqrt((ball.x - centerX) ** 2 + (ball.y - centerY) ** 2);
@@ -297,6 +344,13 @@ function updateGameState() {
 
     if (isControlsReversed) {
         reverseControlsTimer -= 16; 
+        
+        // Update Timer Bar
+        if (reverseTimerBar) {
+            const pct = Math.max(0, (reverseControlsTimer / reverseControlsDuration) * 100);
+            reverseTimerBar.style.width = pct + '%';
+        }
+
         if (reverseControlsTimer <= 0) {
             isControlsReversed = false;
             reverseWarning.style.display = 'none';
@@ -341,7 +395,7 @@ function checkCollisions() {
                     isControlsReversed = true;
                     reverseControlsTimer = reverseControlsDuration;
                     reverseWarning.style.display = 'block';
-                    score += 5; 
+                    score += 20; 
                 } else {
                     score += 10;
                 }
@@ -379,20 +433,24 @@ function triggerGameOver() {
     gameState = 'gameOver';
     finalScoreDisplay.textContent = score;
     
-    
     const gameOverReasonElement = document.getElementById('gameOverReason');
     if (gameOverReasonElement) {
         gameOverReasonElement.textContent = gameOverReason;
     }
+
+    // Update High Score logic
+    if (score > lastHighScore) {
+        lastHighScore = score;
+        localStorage.setItem('cursorChaseHighScore', lastHighScore);
+        highScoreDisplay.textContent = lastHighScore;
+    }
+    
+    const finalHighScoreDisplay = document.getElementById('finalHighScore');
+    if (finalHighScoreDisplay) {
+        finalHighScoreDisplay.textContent = lastHighScore;
+    }
     
     gameOverScreen.style.display = 'block';
-    
-    
-    if (score > highScore) {
-        highScore = score;
-        localStorage.setItem('cursorChaseHighScore', highScore);
-        highScoreDisplay.textContent = highScore;
-    }
 }
 
 function draw() {

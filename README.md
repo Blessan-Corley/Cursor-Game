@@ -11,7 +11,7 @@ Welcome to the most intense mouse-dodging experience of your life! In this game,
 3. Move your mouse to dodge the chasing ball
 4. Collect stars to increase your score:
    - ⭐ White stars: +10 points
-   - 🔴 Red stars: +5 points, but... they reverse your controls!
+   - 🔴 Red stars: +20 points, but... they reverse your controls!
 5. Survive as long as you can and beat your high score!
 
 ## Features
