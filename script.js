@@ -66,18 +66,44 @@ const touchOverlay = document.createElement('div');
 touchOverlay.className = 'touch-overlay';
 document.body.appendChild(touchOverlay);
 
-function handlePointerMove(e) {
-    const rect = canvas.getBoundingClientRect();
-    let clientX, clientY;
+// --- MOUSE HANDLING ---
+canvas.addEventListener('mousemove', (e) => {
+    isMobile = false;
+    handlePointerMove(e.clientX, e.clientY);
+});
+
+canvas.addEventListener('mouseenter', (e) => {
+    isMouseInside = true;
+    handlePointerMove(e.clientX, e.clientY);
+});
+
+canvas.addEventListener('mouseleave', () => {
+    isMouseInside = false;
+});
+
+// --- TOUCH HANDLING (Mobile Fix) ---
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Stop scrolling/zooming
+    isMobile = true;
+    const touch = e.touches[0];
+    handlePointerMove(touch.clientX, touch.clientY);
     
-    if (e.type.includes('touch')) {
-        isMobile = true;
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-    } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
+    if (gameState === 'waiting') {
+        startGame();
     }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // Stop scrolling/zooming
+    if (!isMobile) return;
+    const touch = e.touches[0];
+    handlePointerMove(touch.clientX, touch.clientY);
+}, { passive: false });
+
+
+// Core movement logic that accepts raw screen coordinates
+function handlePointerMove(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
     
     // Absolute Position Logic
     let targetX = clientX - rect.left;
@@ -89,21 +115,18 @@ function handlePointerMove(e) {
         targetY = centerY - (targetY - centerY);
     }
 
-    // Apply strict physics to player position (smooth movement towards target could be added here, 
-    // but instant tracking is most responsive).
     playerX = targetX;
     playerY = targetY;
 
     // Check border collision
     const distFromCenter = Math.sqrt((playerX - centerX) ** 2 + (playerY - centerY) ** 2);
     
-    // VISUAL CLAMP: Ensure dot never visually leaves the arena
+    // VISUAL CLAMP & DEATH
     if (distFromCenter > arenaRadius - 6) {
         const angle = Math.atan2(playerY - centerY, playerX - centerX);
         playerX = centerX + Math.cos(angle) * (arenaRadius - 6);
         playerY = centerY + Math.sin(angle) * (arenaRadius - 6);
         
-        // Strict Game Over on Border Touch
         if (gameState === 'playing') {
             gameOverReason = 'You touched the border!';
             triggerGameOver();
@@ -114,32 +137,6 @@ function handlePointerMove(e) {
     mouseX = playerX;
     mouseY = playerY;
 }
-
-
-canvas.addEventListener('mousemove', handlePointerMove);
-canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    handlePointerMove(e);
-}, { passive: false });
-
-// Simplified listeners - Absolute positioning doesn't need complex enter/leave logic
-canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    isMobile = true;
-    handlePointerMove(e); // Update position immediately on touch
-    if (gameState === 'waiting') {
-        startGame();
-    }
-}, { passive: false });
-
-canvas.addEventListener('mouseenter', (e) => {
-    isMouseInside = true;
-    handlePointerMove(e); // Sync immediately on enter
-});
-
-canvas.addEventListener('mouseleave', () => {
-    isMouseInside = false;
-});
 
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
