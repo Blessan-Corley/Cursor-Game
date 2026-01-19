@@ -1,5 +1,7 @@
 # Cursor Chase Game
 
+![Cursor Game Demo](Cursor%20Game%20Demo.gif)
+
 Welcome to the most intense mouse-dodging experience of your life! In this game, you are the white dot, and a relentless ball is trying to catch you. Your mission? Don't get caught!
 
 ## How to Play

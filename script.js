@@ -450,10 +450,27 @@ function draw() {
 }
 
 
-function gameLoop() {
-    updateBall();
-    updateGameState();
-    checkCollisions();
+let lastTime = 0;
+let accumulator = 0;
+const TIMESTEP = 1000 / 60; // 60 FPS logic updates
+
+function gameLoop(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    const deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+
+    accumulator += deltaTime;
+
+    // Prevent spiral of death if lag is too massive (cap at 0.25s)
+    if (accumulator > 250) accumulator = 250;
+
+    while (accumulator >= TIMESTEP) {
+        updateBall();
+        updateGameState();
+        checkCollisions();
+        accumulator -= TIMESTEP;
+    }
+
     draw();
     
     if (gameState === 'playing' && Math.random() < 0.008) {
@@ -487,4 +504,4 @@ ball.y = centerY - 100;
 isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 instructions.textContent = isMobile ? 'Tap to start playing!' : 'Press SPACE to start playing!';
 
-gameLoop();
+requestAnimationFrame(gameLoop);
